@@ -7,13 +7,13 @@ let dataFetchInterval = null;
 const sourceConfig = {
   'A': { name: '小芳堂', deviceId: 'B827EBC2994D', hasData: true },
   'B': { name: '司令台', deviceId: 'B827EBC2994D', hasData: true },  // 真實數據
-  'C': { name: '小田原', deviceId: 'DEVICE_C', hasData: false },     // 靜態
+  'C': { name: '小田原', deviceId: 'DEVICE_C', hasData: false },      // 靜態
   'D': { name: '腳踏車練習場', deviceId: 'DEVICE_D', hasData: false }, // 靜態
   'E': { name: '植物觀測', deviceId: 'PLANT_DEVICE', hasData: true }  // ✅ NOW HAS GAS DATA SOURCE
 };
 
-// ✅ UPDATED: 植物觀測專用 GAS Web App URL (官方來源)
-const PLANT_GAS_URL = 'https://script.google.com/macros/s/AKfycbzfUbGWXNdxPdfW7R1c6H03X2g-711TN9L7I4Vn4vS1eyZlIIJtfsulAOz0Yl30-X1LpQ/exec';
+// ✅ UPDATED: New GAS Web App URL applied below
+const PLANT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwWD2sPK7Iw61gkzCTCOLIYEnmfirKXeLgdvxR3m6vEs1ZecdUj9x5YPwNvMSqW47gtHQ/exec';
 
 // DOM elements
 document.addEventListener('DOMContentLoaded', function() {
@@ -97,7 +97,7 @@ function switchPage(source) {
     fetchPlantData();  // 立即獲取
     dataFetchInterval = setInterval(fetchPlantData, 30000); // 每30秒更新
   } else {
-    // 標準模式 (原有邏輯不變)
+    // 標準模式
     isPlantMode = false;
     document.getElementById('plant-layout').style.display = 'none';
     document.getElementById('plant-layout').classList.remove('active');
@@ -126,7 +126,7 @@ async function fetchPlantData() {
     const data = await response.json();
     console.log('🌿 植物數據:', data);
     
-    // 更新植物頁面所有元素 (假設 GAS 返回對應字段)
+    // 更新植物頁面所有元素
     if (data.pm25 !== undefined) document.getElementById('plant-pm25-value').textContent = data.pm25 + ' μg/m³';
     if (data.humidity !== undefined) document.getElementById('plant-humidity').textContent = data.humidity + ' %';
     if (data.temperature !== undefined) document.getElementById('plant-temperature').textContent = data.temperature + ' °C';
@@ -146,7 +146,7 @@ async function fetchPlantData() {
   }
 }
 
-// 原有標準數據獲取 (不變)
+// 原有標準數據獲取
 async function fetchData() {
   try {
     const config = sourceConfig[currentSource];
@@ -173,7 +173,6 @@ async function fetchData() {
   }
 }
 
-// 靜態數據 (無 API 的頁面)
 function updateStaticData() {
   document.getElementById('pm25-value').textContent = '-- μg/m³';
   document.getElementById('temperature-card').textContent = '-- °C';
@@ -184,7 +183,6 @@ function updateStaticData() {
   document.getElementById('tvoc-card').textContent = '-- ppb';
 }
 
-// ✅ UPDATED: 統一使用儀表板配色方案 (灰色基調)
 function updateDataStatus(text, bgColor, color) {
   const statusEl = document.getElementById('data-status');
   statusEl.textContent = text;
@@ -193,7 +191,6 @@ function updateDataStatus(text, bgColor, color) {
   statusEl.style.border = `1px solid ${color === '#333' ? '#ddd' : '#bbb'}`;
 }
 
-// Clock functionality
 function updateClock() {
   const now = new Date();
   const hours = now.getHours() % 12;
@@ -215,5 +212,3 @@ function updateClock() {
   document.getElementById('time-display').textContent = 
     now.toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
-
-console.log('🌱 FH EnviroDashboard (植物頁面 GAS 整合版 + 統一配色) 載入完成');
