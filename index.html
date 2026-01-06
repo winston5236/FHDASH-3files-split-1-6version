@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<title>FH EnivroDashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <!-- Top Header with Data Status -->
+  <header class="header">
+    芳和實驗中學環境現況
+    <div id="data-status">載入中...</div>
+  </header>
+
+  <!-- App Container -->
+  <div class="app-container">
+    <div class="app">
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="dropdown-container">
+          <button class="dropdown-btn" id="source-selector">小芳堂 ▼</button>
+          <ul class="dropdown-list hidden" id="source-list">
+            <li data-source="A">小芳堂</li>
+            <li data-source="B">司令台</li>
+            <li data-source="C">小田原</li>
+            <li data-source="D">腳踏車練習場</li>
+            <li data-source="E">植物觀測</li>
+          </ul>
+        </div>
+
+        <div class="menu">
+          <div data-modal="temperature">溫度</div>
+          <div data-modal="sunlight">日照</div>
+          <div data-modal="windspeed">風速</div>
+          <div data-modal="humidity">濕度</div>
+          <div data-modal="co2">碳排放</div>
+          <div data-modal="tvoc">有機物</div>
+          <div data-modal="pm25">PM2.5</div>
+          <div data-modal="electricity">用電量</div>
+        </div>
+        
+        <div class="clock" id="datetime">
+          <div class="clock-svg">
+            <svg id="clock-svg" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#fff" stroke-width="4"/>
+              <circle cx="50" cy="12" r="3" fill="#fff"/>
+              <circle cx="88" cy="23" r="3" fill="#fff"/>
+              <circle cx="93" cy="50" r="3" fill="#fff"/>
+              <circle cx="88" cy="77" r="3" fill="#fff"/>
+              <circle cx="50" cy="88" r="3" fill="#fff"/>
+              <circle cx="12" cy="77" r="3" fill="#fff"/>
+              <circle cx="7" cy="50" r="3" fill="#fff"/>
+              <circle cx="12" cy="23" r="3" fill="#fff"/>
+              <rect id="hour-hand" x="48" y="25" width="4" height="25" rx="2" fill="#ddd" transform-origin="50px 50px"/>
+              <rect id="minute-hand" x="48.5" y="18" width="3" height="32" rx="1.5" fill="#fff" transform-origin="50px 50px"/>
+              <rect id="second-hand" x="49" y="16" width="2" height="34" rx="1" fill="#ff4444" transform-origin="50px 50px"/>
+              <circle cx="50" cy="50" r="4" fill="#fff"/>
+            </svg>
+          </div>
+          <div class="clock-digital">
+            <div class="date-display" id="date-display"></div>
+            <div class="time-display" id="time-display"></div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- STANDARD LAYOUT -->
+      <main class="main" id="standard-layout">
+        <section class="top-block columns">
+          <div class="pm25" id="pm25-card">
+            <div class="pm25-label">PM2.5</div>
+            <div class="pm25-value" id="pm25-value">-- μg/m³</div>
+          </div>
+          <div class="right-stack">
+            <div class="right-card" id="temperature-card">-- °C</div>
+            <div class="right-card" id="sunlight-card">-- lux</div>
+            <div class="right-card" id="windspeed-card">-- m/s</div>
+            <div class="right-card" id="humidity-card">-- %</div>
+          </div>
+        </section>
+        <section class="bottom-block columns">
+          <div class="connected-group">
+            <div class="connected-card" id="co2-card">-- ppm</div>
+            <div class="connected-card" id="tvoc-card">-- ppb</div>
+            <div class="connected-card" id="electricity-card">-- kWh</div>
+          </div>
+          <div class="small-card-row">
+            <div class="small-card" id="precipitation-card">-- %</div>
+            <div class="small-card" id="icon-card">🌤️</div>
+          </div>
+        </section>
+      </main>
+
+      <!-- PLANT LAYOUT -->
+      <main class="main" id="plant-layout">
+        <section class="top-block">
+          <div class="plant-top-pm25">
+            <div class="plant-pm25-label">PM2.5</div>
+            <div class="plant-pm25-value" id="plant-pm25-value">-- μg/m³</div>
+          </div>
+        </section>
+        <section class="bottom-block">
+          <div class="plant-bottom-row">
+            <div class="plant-bottom-card">
+              <div class="label">濕度</div>
+              <div class="value" id="plant-humidity">-- %</div>
+            </div>
+            <div class="plant-bottom-card">
+              <div class="label">溫度</div>
+              <div class="value" id="plant-temperature">-- °C</div>
+            </div>
+            <div class="plant-bottom-card">
+              <div class="label">土壤濕度</div>
+              <div class="value" id="plant-soil-humidity">-- %</div>
+            </div>
+            <div class="plant-bottom-card">
+              <div class="label">CO2</div>
+              <div class="value" id="plant-co2">-- ppm</div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="history-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title" id="modal-title"></h1>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <h3>歷史數據圖表將顯示在這裡</h3>
+        <p>這是 <span id="modal-type"></span> 的歷史數據區域。</p>
+        <p>未來將整合圖表顯示過去 24 小時或 7 天的数据變化。</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
