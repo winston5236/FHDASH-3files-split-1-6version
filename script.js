@@ -3,16 +3,16 @@ let currentPageName = '小芳堂';
 let isPlantMode = false;
 let dataFetchInterval = null;
 
-// ✅ FIXED: 每個位置獨立 device_id，只有司令台有真實數據
+// ✅ UPDATED: Source A now points to B827EB63D1C8
 const sourceConfig = {
-  'A': { name: '小芳堂', deviceId: 'B827EBC2994D', hasData: true },
-  'B': { name: '司令台', deviceId: 'B827EBC2994D', hasData: true },  // 真實數據
-  'C': { name: '小田原', deviceId: 'DEVICE_C', hasData: false },      // 靜態
-  'D': { name: '腳踏車練習場', deviceId: 'DEVICE_D', hasData: false }, // 靜態
-  'E': { name: '植物觀測', deviceId: 'PLANT_DEVICE', hasData: true }  // ✅ NOW HAS GAS DATA SOURCE
+  'A': { name: '小芳堂', deviceId: 'B827EB63D1C8', hasData: true },
+  'B': { name: '司令台', deviceId: 'B827EBC2994D', hasData: true },
+  'C': { name: '小田原', deviceId: 'DEVICE_C', hasData: false },
+  'D': { name: '腳踏車練習場', deviceId: 'DEVICE_D', hasData: false },
+  'E': { name: '植物觀測', deviceId: 'PLANT_DEVICE', hasData: true }
 };
 
-// ✅ UPDATED: New GAS Web App URL applied below
+// ✅ UPDATED: Target GAS Web App URL for Plant Mode
 const PLANT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwWD2sPK7Iw61gkzCTCOLIYEnmfirKXeLgdvxR3m6vEs1ZecdUj9x5YPwNvMSqW47gtHQ/exec';
 
 // DOM elements
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
   setInterval(updateClock, 1000);
 });
 
-// ✅ FIXED: 精確頁面切換 + 植物頁面使用 GAS URL
+// 精確頁面切換
 function switchPage(source) {
   currentSource = source;
   currentPageName = sourceConfig[source].name;
@@ -79,54 +79,44 @@ function switchPage(source) {
   
   document.getElementById('source-selector').textContent = `${currentPageName} ▼`;
 
-  // 停止之前的定時器
   if (dataFetchInterval) {
     clearInterval(dataFetchInterval);
     dataFetchInterval = null;
   }
 
-  // 切換顯示區域
   if (source === 'E') {
-    // ✅ PLANT MODE - 使用 GAS Web App 作為唯一數據源
     isPlantMode = true;
     document.getElementById('standard-layout').style.display = 'none';
     document.getElementById('plant-layout').style.display = 'flex';
     document.getElementById('plant-layout').classList.add('active');
     updateDataStatus('🌱 植物即時數據', '#e8e8e8', '#888');
-    console.log('🌱 切換至植物觀測 - GAS 數據獲取');
-    fetchPlantData();  // 立即獲取
-    dataFetchInterval = setInterval(fetchPlantData, 30000); // 每30秒更新
+    fetchPlantData();
+    dataFetchInterval = setInterval(fetchPlantData, 30000);
   } else {
-    // 標準模式
     isPlantMode = false;
     document.getElementById('plant-layout').style.display = 'none';
     document.getElementById('plant-layout').classList.remove('active');
     document.getElementById('standard-layout').style.display = 'flex';
     
     if (config.hasData) {
-      console.log(`📡 切換至 ${currentPageName} - 開始數據獲取`);
       updateDataStatus('📡 連線中...', '#e8e8e8', '#888');
       fetchData();
       dataFetchInterval = setInterval(fetchData, 30000);
     } else {
-      console.log(`⚠️ ${currentPageName} 暫無數據來源`);
       updateStaticData();
       updateDataStatus('⚠️ 暫無數據', '#e8e8e8', '#888');
     }
   }
 }
 
-// ✅ NEW: 植物頁面專用 GAS 數據獲取函數
+// 植物頁面 GAS 數據獲取
 async function fetchPlantData() {
   try {
-    console.log('🌿 獲取植物數據:', PLANT_GAS_URL);
     const response = await fetch(PLANT_GAS_URL);
     if (!response.ok) throw new Error('GAS response failed');
     
     const data = await response.json();
-    console.log('🌿 植物數據:', data);
     
-    // 更新植物頁面所有元素
     if (data.pm25 !== undefined) document.getElementById('plant-pm25-value').textContent = data.pm25 + ' μg/m³';
     if (data.humidity !== undefined) document.getElementById('plant-humidity').textContent = data.humidity + ' %';
     if (data.temperature !== undefined) document.getElementById('plant-temperature').textContent = data.temperature + ' °C';
@@ -137,7 +127,6 @@ async function fetchPlantData() {
   } catch (error) {
     console.error('🌿 植物數據獲取失敗:', error);
     updateDataStatus('❌ 植物數據斷線', '#e8e8e8', '#888');
-    // 顯示預設值
     document.getElementById('plant-pm25-value').textContent = '-- μg/m³';
     document.getElementById('plant-humidity').textContent = '-- %';
     document.getElementById('plant-temperature').textContent = '-- °C';
@@ -146,18 +135,16 @@ async function fetchPlantData() {
   }
 }
 
-// 原有標準數據獲取
+// 標準環境數據獲取 (小芳堂 & 司令台)
 async function fetchData() {
   try {
     const config = sourceConfig[currentSource];
     const url = `https://pm25.lass-net.org/data/last.php?device_id=${config.deviceId}`;
     
-    console.log(`📡 獲取 ${currentPageName} 數據:`, url);
     const response = await fetch(url);
     const data = await response.json();
     
-    console.log('📊 原始數據:', data);
-    
+    // Mapping LASS keys to UI elements
     if (data.s_d0 !== undefined) document.getElementById('pm25-value').textContent = data.s_d0 + ' μg/m³';
     if (data.s_t0 !== undefined) document.getElementById('temperature-card').textContent = data.s_t0 + ' °C';
     if (data.s_h0 !== undefined) document.getElementById('humidity-card').textContent = data.s_h0 + ' %';
@@ -174,21 +161,20 @@ async function fetchData() {
 }
 
 function updateStaticData() {
-  document.getElementById('pm25-value').textContent = '-- μg/m³';
-  document.getElementById('temperature-card').textContent = '-- °C';
-  document.getElementById('humidity-card').textContent = '-- %';
-  document.getElementById('sunlight-card').textContent = '-- lux';
-  document.getElementById('windspeed-card').textContent = '-- m/s';
-  document.getElementById('co2-card').textContent = '-- ppm';
-  document.getElementById('tvoc-card').textContent = '-- ppb';
+  const fields = ['pm25-value', 'temperature-card', 'humidity-card', 'sunlight-card', 'windspeed-card', 'co2-card', 'tvoc-card'];
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '--';
+  });
 }
 
 function updateDataStatus(text, bgColor, color) {
   const statusEl = document.getElementById('data-status');
-  statusEl.textContent = text;
-  statusEl.style.background = bgColor;
-  statusEl.style.color = color;
-  statusEl.style.border = `1px solid ${color === '#333' ? '#ddd' : '#bbb'}`;
+  if (statusEl) {
+    statusEl.textContent = text;
+    statusEl.style.background = bgColor;
+    statusEl.style.color = color;
+  }
 }
 
 function updateClock() {
@@ -201,14 +187,18 @@ function updateClock() {
   const minuteDeg = minutes * 6;
   const secondDeg = seconds * 6;
   
-  document.getElementById('hour-hand').style.transform = `rotate(${hourDeg}deg)`;
-  document.getElementById('minute-hand').style.transform = `rotate(${minuteDeg}deg)`;
-  document.getElementById('second-hand').style.transform = `rotate(${secondDeg}deg)`;
+  const hHand = document.getElementById('hour-hand');
+  const mHand = document.getElementById('minute-hand');
+  const sHand = document.getElementById('second-hand');
+  
+  if (hHand) hHand.style.transform = `rotate(${hourDeg}deg)`;
+  if (mHand) mHand.style.transform = `rotate(${minuteDeg}deg)`;
+  if (sHand) sHand.style.transform = `rotate(${secondDeg}deg)`;
   
   const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-  document.getElementById('date-display').textContent = 
-    `${weekdays[now.getDay()]} ${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()}`;
+  const dateDisp = document.getElementById('date-display');
+  const timeDisp = document.getElementById('time-display');
   
-  document.getElementById('time-display').textContent = 
-    now.toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  if (dateDisp) dateDisp.textContent = `${weekdays[now.getDay()]} ${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()}`;
+  if (timeDisp) timeDisp.textContent = now.toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
