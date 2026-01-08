@@ -26,10 +26,12 @@ let historyData = {
 document.addEventListener('DOMContentLoaded', () => {
   initPM25Gauge();
   
+  // Sidebar Menu Clicks
   document.querySelectorAll('.menu div[data-modal]').forEach(item => {
     item.addEventListener('click', () => openModal(item.getAttribute('data-modal')));
   });
 
+  // Source Selector Dropdown
   const dropdownBtn = document.getElementById('source-selector');
   const dropdownList = document.getElementById('source-list');
   dropdownBtn.addEventListener('click', (e) => {
@@ -44,14 +46,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  document.getElementById('modal-close').onclick = () => document.getElementById('history-modal').classList.remove('active');
+  // Modal Closing Logic
+  const modal = document.getElementById('history-modal');
+  const closeBtn = document.getElementById('modal-close');
+
+  closeBtn.onclick = () => modal.classList.remove('active');
   
+  // Close by clicking outside the white box
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.classList.remove('active');
+  });
+
   switchPage('A');
   updateClock();
   setInterval(updateClock, 1000);
 });
 
-// --- PM2.5 Gauge Logic ---
 function initPM25Gauge() {
   const ctx = document.getElementById('pm25Gauge').getContext('2d');
   pm25GaugeChart = new Chart(ctx, {
@@ -63,8 +73,8 @@ function initPM25Gauge() {
         borderWidth: 0,
         circumference: 270,
         rotation: 225,
-        borderRadius: 15,
-        cutout: '80%'
+        borderRadius: 20,
+        cutout: '82%'
       }]
     },
     options: {
@@ -78,19 +88,20 @@ function initPM25Gauge() {
 
 function updatePM25Gauge(val) {
   let color = '#3aa02d', status = '良好';
-  if (val > 15) { color = '#fdd835'; status = '普通'; }
-  if (val > 35) { color = '#ff9800'; status = '對敏感族群不健康'; }
-  if (val > 54) { color = '#f44336'; status = '不健康'; }
-  if (val > 150) { color = '#9c27b0'; status = '非常不健康'; }
+  if (val > 15.4) { color = '#fdd835'; status = '普通'; }
+  if (val > 35.4) { color = '#ff9800'; status = '普通'; }
+  if (val > 54.4) { color = '#f44336'; status = '不健康'; }
+  if (val > 150.4) { color = '#9c27b0'; status = '非常不健康'; }
 
   document.getElementById('pm25-value').textContent = val.toFixed(1);
   const badge = document.getElementById('pm25-status-badge');
   badge.textContent = status;
   badge.style.backgroundColor = color;
+  badge.style.color = (status === '普通') ? '#333' : '#fff';
 
   if (pm25GaugeChart) {
-    const max = 100; // Gauge Scale Max
-    pm25GaugeChart.data.datasets[0].data = [Math.min(val, max), Math.max(0, max - val)];
+    const maxScale = 100;
+    pm25GaugeChart.data.datasets[0].data = [Math.min(val, maxScale), Math.max(0, maxScale - val)];
     pm25GaugeChart.data.datasets[0].backgroundColor[0] = color;
     pm25GaugeChart.update();
   }
