@@ -3,125 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>環境監測儀表板</title>
+    <title>校園環境監測系統</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="header">
-        校園環境監測系統
+        芳和實驗中學環境現況
         <div id="data-status">初始化中...</div>
     </div>
 
     <div class="app-container">
-        <div class="app">
-            <div class="sidebar">
-                <div class="dropdown-container">
-                    <button class="dropdown-btn" id="source-selector">小芳堂 ▼</button>
-                    <ul class="dropdown-list hidden" id="source-list">
-                        <li data-source="A">小芳堂</li>
-                        <li data-source="B">司令台</li>
-                        <li data-source="C">小田原</li>
-                        <li data-source="D">腳踏車練習場</li>
-                        <li data-source="E">植物觀測</li>
-                    </ul>
-                </div>
-                
-                <div class="menu">
-                    <div data-modal="pm25">PM2.5 歷史趨勢</div>
-                    <div data-modal="temperature">溫度歷史趨勢</div>
-                    <div data-modal="humidity">濕度歷史趨勢</div>
-                </div>
+        <div class="sidebar">
+            <div class="dropdown-container">
+                <button class="dropdown-btn" id="source-selector">小芳堂 ▼</button>
+                <ul class="dropdown-list hidden" id="source-list">
+                    <li data-source="A">小芳堂</li>
+                    <li data-source="B">司令台</li>
+                    <li data-source="C">小田原</li>
+                    <li data-source="D">腳踏車練習場</li>
+                    <li data-source="E">植物觀測</li>
+                </ul>
+            </div>
+            
+            <div class="menu">
+                <div data-modal="pm25">PM2.5 歷史趨勢</div>
+                <div data-modal="temperature">溫度歷史趨勢</div>
+                <div data-modal="humidity">濕度歷史趨勢</div>
+            </div>
 
-                <div class="clock">
-                    <svg id="clock-svg" viewBox="0 0 100 100">
+            <div class="clock-panel">
+                <div class="clock-icon">
+                    <svg viewBox="0 0 100 100">
                         <circle cx="50" cy="50" r="45" fill="none" stroke="white" stroke-width="2"/>
                         <line id="hour-hand" x1="50" y1="50" x2="50" y2="30" stroke="white" stroke-width="4" stroke-linecap="round"/>
                         <line id="minute-hand" x1="50" y1="50" x2="50" y2="20" stroke="white" stroke-width="3" stroke-linecap="round"/>
-                        <line id="second-hand" x1="50" y1="50" x2="50" y2="15" stroke="red" stroke-width="1"/>
                     </svg>
-                    <div class="clock-digital">
-                        <div id="date-display" class="date-display">--</div>
-                        <div id="time-display" class="time-display">00:00:00</div>
-                    </div>
+                </div>
+                <div class="clock-text">
+                    <div id="date-display">--</div>
+                    <div id="time-display">00:00:00</div>
                 </div>
             </div>
+        </div>
 
-            <div class="main">
-                
-                <div id="standard-layout" class="layout-container">
-                    <div class="top-row">
-                        <div class="pm25-box">
-                            <div class="gauge-wrapper">
-                                <canvas id="pm25Gauge"></canvas>
-                                <div class="gauge-text">
-                                    <div class="label">PM2.5</div>
-                                    <div class="value" id="pm25-value">--</div>
-                                    <div id="pm25-status-badge">--</div>
-                                </div>
+        <div class="main-content">
+            
+            <div id="standard-layout" class="view-container">
+                <div class="row-top">
+                    <div class="gauge-card">
+                        <div class="canvas-container">
+                            <canvas id="pm25Gauge"></canvas>
+                            <div class="gauge-overlay">
+                                <div class="label">PM2.5</div>
+                                <div class="value" id="pm25-value">--</div>
+                                <div id="pm25-status-badge">--</div>
                             </div>
                         </div>
-                        <div class="side-stack">
-                            <div class="card" id="temperature-card">-- °C</div>
-                            <div class="card" id="sunlight-card">-- lux</div>
-                        </div>
                     </div>
-                    <div class="bottom-row">
-                        <div class="triple-group">
-                            <div class="segment" id="windspeed-card">-- m/s</div>
-                            <div class="segment" id="humidity-card">-- %</div>
-                            <div class="segment" id="co2-card">-- ppm</div>
-                        </div>
-                        <div class="double-group">
-                            <div class="card" id="tvoc-card">-- ppb</div>
-                            <div class="card" id="precipitation-card">-- %</div>
-                        </div>
+                    <div class="stack-card">
+                        <div class="data-box" id="temperature-card">-- °C</div>
+                        <div class="data-box" id="sunlight-card">-- lux</div>
                     </div>
                 </div>
-
-                <div id="plant-layout" class="layout-container hidden">
-                    <div class="plant-hero">
-                        <div class="label">植物區 PM2.5</div>
-                        <div class="value" id="plant-pm25-value">--</div>
+                <div class="row-bottom">
+                    <div class="triple-card">
+                        <div class="segment" id="windspeed-card">-- m/s</div>
+                        <div class="segment" id="humidity-card">-- %</div>
+                        <div class="segment" id="co2-card">-- ppm</div>
                     </div>
-                    <div class="plant-grid">
-                        <div class="p-card">
-                            <span class="p-label">空氣濕度</span>
-                            <span class="p-val" id="plant-humidity">-- %</span>
-                        </div>
-                        <div class="p-card">
-                            <span class="p-label">空氣溫度</span>
-                            <span class="p-val" id="plant-temperature">-- °C</span>
-                        </div>
-                        <div class="p-card">
-                            <span class="p-label">土壤濕度</span>
-                            <span class="p-val" id="plant-soil-humidity">-- %</span>
-                        </div>
-                        <div class="p-card">
-                            <span class="p-label">二氧化碳</span>
-                            <span class="p-val" id="plant-co2">-- ppm</span>
-                        </div>
+                    <div class="double-card">
+                        <div class="data-box" id="tvoc-card">-- ppb</div>
+                        <div class="data-box" id="precipitation-card">-- %</div>
                     </div>
                 </div>
-
-                <div id="no-data-layout" class="layout-container hidden">
-                    <div class="empty-state">
-                        <h2>⚠️ 目前無數據</h2>
-                        <p>此地點感測器尚未上線或正在維護中。</p>
-                    </div>
-                </div>
-
             </div>
+
+            <div id="plant-layout" class="view-container hidden">
+                <div class="plant-hero">
+                    <div class="label">植物觀測區 PM2.5</div>
+                    <div class="value" id="plant-pm25-value">--</div>
+                </div>
+                <div class="plant-grid">
+                    <div class="p-box">
+                        <span class="p-label">空氣濕度</span>
+                        <span class="p-val" id="plant-humidity">-- %</span>
+                    </div>
+                    <div class="p-box">
+                        <span class="p-label">空氣溫度</span>
+                        <span class="p-val" id="plant-temperature">-- °C</span>
+                    </div>
+                    <div class="p-box">
+                        <span class="p-label">土壤濕度</span>
+                        <span class="p-val" id="plant-soil-humidity">-- %</span>
+                    </div>
+                    <div class="p-box">
+                        <span class="p-label">二氧化碳</span>
+                        <span class="p-val" id="plant-co2">-- ppm</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="no-data-layout" class="view-container hidden">
+                <div class="empty-state">
+                    <h2>⚠️ 目前無數據</h2>
+                    <p>該地點感測器尚未配置或離線中。</p>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <div class="modal-overlay" id="history-modal">
         <div class="modal-content">
             <button class="modal-close" id="modal-close">&times;</button>
-            <div class="modal-header">
-                <h2 id="modal-title">歷史數據</h2>
-            </div>
-            <div class="modal-body">
+            <h2 id="modal-title">歷史趨勢</h2>
+            <div class="chart-box">
                 <canvas id="historyChart"></canvas>
             </div>
         </div>
