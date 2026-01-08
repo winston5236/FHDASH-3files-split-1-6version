@@ -13,6 +13,8 @@ const sourceConfig = {
 
 const PLANT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwWD2sPK7Iw61gkzCTCOLIYEnmfirKXeLgdvxR3m6vEs1ZecdUj9x5YPwNvMSqW47gtHQ/exec';
 
+// --- Initialization ---
+
 document.addEventListener('DOMContentLoaded', () => {
   const dropdownBtn = document.getElementById('source-selector');
   const dropdownList = document.getElementById('source-list');
@@ -33,6 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updateClock, 1000);
 });
 
+// --- Core Data Fetching Logic ---
+
 async function fetchData() {
   try {
     const config = sourceConfig[currentSource];
@@ -41,28 +45,47 @@ async function fetchData() {
     const response = await fetch(url);
     const result = await response.json();
     
-    // Some LASS devices return an array inside "feeds", others return a direct object
-    const data = result.feeds ? result.feeds[0] : result;
-    
-    // ✅ SMART MAPPING: Checks multiple possible keys for each sensor
-    const sensors = {
-      'pm25-value': data.s_d0 ?? data.s_0 ?? data.PM2_5,
-      'temperature-card': data.s_t0 ?? data.s_t1 ?? data.Temperature,
-      'humidity-card': data.s_h0 ?? data.s_h1 ?? data.Humidity,
-      'sunlight-card': data.s_lux0 ?? data.s_l0 ?? data.Lux,
-      'co2-card': data.s_co2 ?? data.s_c1 ?? data.CO2,
-      'tvoc-card': data.s_tvoc ?? data.s_v1 ?? data.TVOC,
-      'windspeed-card': data.s_w0 ?? data.WindSpeed
+    // 1. Correct LASS Data Extraction (Drilling through the nested ID key)
+    let feed = null;
+    if (result.feeds && result.feeds[0]) {
+        const deviceWrapper = result.feeds[0];
+        const deviceIdKey = Object.keys(deviceWrapper)[0];
+        feed = deviceWrapper[deviceIdKey];
+    }
+
+    if (!feed) throw new Error("No data found for this device");
+
+    // 2. Fallback Key Helper (from Script 1)
+    const getVal = (keys, fallback = null) => {
+        for (const key of keys) {
+            if (feed[key] !== undefined && !isNaN(feed[key])) return parseFloat(feed[key]);
+        }
+        return fallback;
     };
 
-    // Update the UI
+    // 3. Sensor Mapping
+    const sensors = {
+      'pm25-value': getVal(["s_d0", "pm25", "PM2_5", "PM25_AVG"]),
+      'temperature-card': getVal(["s_t0", "s_t1", "Temperature", "temperature", "temp"]),
+      'humidity-card': getVal(["s_h0", "s_h1", "Humidity", "humidity", "humid"]),
+      'sunlight-card': getVal(["s_l0", "s_lux0", "Lux", "s_l"]),
+      'co2-card': getVal(["s_co2", "CO2", "co2"]),
+      'tvoc-card': getVal(["s_tvoc", "TVOC", "tvoc"]),
+      'windspeed-card': getVal(["s_w", "s_w0", "WindSpeed"])
+    };
+
+    // 4. UI Update Loop
     for (const [id, value] of Object.entries(sensors)) {
       const el = document.getElementById(id);
       if (el) {
-        if (value !== undefined && value !== null) {
-          el.textContent = `${value} ${getUnit(id)}`;
+        if (value !== null) {
+          // Color logic for PM2.5
+          if (id === 'pm25-value') el.style.color = getLassPM25Color(value);
+          
+          el.textContent = `${Math.round(value * 10) / 10} ${getUnit(id)}`;
         } else {
           el.textContent = `-- ${getUnit(id)}`;
+          if (id === 'pm25-value') el.style.color = '';
         }
       }
     }
@@ -97,6 +120,15 @@ async function fetchPlantData() {
   }
 }
 
+// --- Helper Functions ---
+
+function getLassPM25Color(value) {
+    if (value < 30) return 'rgb(58,160,45)';   // Green
+    if (value < 70) return 'rgb(218,165,32)';  // Goldenrod (better visibility than pure yellow)
+    if (value < 500) return 'rgb(250,0,0)';    // Red
+    return 'rgb(250,0,250)';                   // Purple
+}
+
 function getUnit(id) {
   if (id.includes('pm25')) return 'μg/m³';
   if (id.includes('temperature')) return '°C';
@@ -111,7 +143,8 @@ function getUnit(id) {
 function switchPage(source) {
   currentSource = source;
   currentPageName = sourceConfig[source].name;
-  document.getElementById('source-selector').textContent = `${currentPageName} ▼`;
+  const selector = document.getElementById('source-selector');
+  if (selector) selector.textContent = `${currentPageName} ▼`;
 
   if (dataFetchInterval) clearInterval(dataFetchInterval);
 
@@ -119,16 +152,17 @@ function switchPage(source) {
   const plantLayout = document.getElementById('plant-layout');
 
   if (source === 'E') {
-    stdLayout.style.display = 'none';
-    plantLayout.style.display = 'flex';
+    if (stdLayout) stdLayout.style.display = 'none';
+    if (plantLayout) plantLayout.style.display = 'flex';
     fetchPlantData();
     dataFetchInterval = setInterval(fetchPlantData, 30000);
   } else {
-    stdLayout.style.display = 'flex';
-    plantLayout.style.display = 'none';
+    if (stdLayout) stdLayout.style.display = 'flex';
+    if (plantLayout) plantLayout.style.display = 'none';
+    
     if (sourceConfig[source].hasData) {
       fetchData();
-      dataFetchInterval = setInterval(fetchData, 30000);
+      dataFetchInterval = setInterval(fetchData, 30000); // Poll every 30s
     } else {
       updateDataStatus('⚠️ 暫無數據', '#f5f5f5', '#9e9e9e');
     }
