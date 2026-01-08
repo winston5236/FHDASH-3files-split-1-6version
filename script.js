@@ -1,15 +1,18 @@
+// --- Global State ---
 let currentSource = 'A';
 let dataFetchInterval = null;
 let chartInstance = null;
 
+// Device mapping from the school
 const sourceConfig = {
   'A': { name: '小芳堂', deviceId: 'B827EB63D1C8' },
   'B': { name: '司令台', deviceId: 'B827EBC2994D' },
-  'C': { name: '小田原', deviceId: 'B827EB64E68F' },
+  'C': { name: '小田原', deviceId: 'B827EB64E68F' }, 
   'D': { name: '腳踏車練習場', deviceId: 'B827EB3C653C' },
   'E': { name: '植物觀測', deviceId: 'PLANT_PAGE' }
 };
 
+// History Storage for Modals
 let historyData = {
   'pm25': { values: [], times: [], color: '#4caf50', label: 'PM2.5' },
   'temperature': { values: [], times: [], color: '#ff9800', label: '溫度' },
@@ -20,11 +23,14 @@ let historyData = {
   'tvoc': { values: [], times: [], color: '#9c27b0', label: '有機物' }
 };
 
+// --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
+  // Sidebar Buttons
   document.querySelectorAll('.menu div[data-modal]').forEach(item => {
     item.addEventListener('click', () => openModal(item.getAttribute('data-modal')));
   });
 
+  // Dropdown Logic
   const dropdownBtn = document.getElementById('source-selector');
   const dropdownList = document.getElementById('source-list');
   dropdownBtn.onclick = (e) => {
@@ -39,56 +45,53 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   });
 
+  // Modal Close
   document.getElementById('modal-close').onclick = () => {
     document.getElementById('history-modal').classList.remove('active');
   };
 
+  // Close dropdown on outside click
   window.onclick = () => dropdownList.classList.add('hidden');
 
-  switchPage('A');
+  switchPage('A'); // Initial load
   updateClock();
   setInterval(updateClock, 1000);
 });
 
-// --- Enhanced Switch Page with Animation ---
+// --- Function to Switch Data Source ---
 function switchPage(sourceKey) {
-  const mainContent = document.getElementById('standard-layout');
-  const plantContent = document.getElementById('plant-layout');
+  currentSource = sourceKey;
+  const config = sourceConfig[sourceKey];
   
-  // 1. Start Fade Out
-  mainContent.classList.add('fade-out');
-  plantContent.classList.add('fade-out');
+  // Update Dropdown Button Text
+  document.getElementById('source-selector').textContent = `${config.name} ▼`;
 
-  setTimeout(() => {
-    currentSource = sourceKey;
-    const config = sourceConfig[sourceKey];
-    document.getElementById('source-selector').textContent = `${config.name} ▼`;
+  // Reset History when switching locations to prevent mixed data
+  Object.keys(historyData).forEach(key => {
+    historyData[key].values = [];
+    historyData[key].times = [];
+  });
 
-    // Reset History
-    Object.keys(historyData).forEach(key => {
-      historyData[key].values = [];
-      historyData[key].times = [];
-    });
-
-    if (dataFetchInterval) clearInterval(dataFetchInterval);
-
-    // 2. Toggle Visibility
-    if (sourceKey === 'E') {
-      mainContent.style.display = 'none';
-      plantContent.style.display = 'flex';
-    } else {
-      mainContent.style.display = 'flex';
-      plantContent.style.display = 'none';
-      fetchData();
-      dataFetchInterval = setInterval(fetchData, 30000);
-    }
-
-    // 3. Fade In
-    mainContent.classList.remove('fade-out');
-    plantContent.classList.remove('fade-out');
-  }, 400); // Matches CSS transition duration
+  // Clear existing interval and fetch immediately
+  if (dataFetchInterval) clearInterval(dataFetchInterval);
+  
+  // Handle Special Plant Page Layout vs Standard
+  const standard = document.getElementById('standard-layout');
+  const plant = document.getElementById('plant-layout');
+  
+  if (sourceKey === 'E') {
+    standard.style.display = 'none';
+    plant.style.display = 'flex';
+    // Logic for plant data fetch would go here
+  } else {
+    standard.style.display = 'flex';
+    plant.style.display = 'none';
+    fetchData(); // Fetch once immediately
+    dataFetchInterval = setInterval(fetchData, 30000); // Set auto-refresh
+  }
 }
 
+// --- Fetching Logic ---
 async function fetchData() {
   try {
     const config = sourceConfig[currentSource];
@@ -104,11 +107,12 @@ async function fetchData() {
     }
     if (!feed) return;
 
+    // Mapping API fields to our internal keys
     const dataMap = {
       'pm25': feed.s_d0 || feed.pm25,
       'temperature': feed.s_t0 || feed.s_t1,
       'humidity': feed.s_h0 || feed.s_h1,
-      'sunlight': feed.s_l0 || (Math.random() * 100 + 300),
+      'sunlight': feed.s_l0 || (Math.random() * 100 + 300), // Fallback if missing
       'co2': feed.s_co2 || (Math.random() * 50 + 440),
       'tvoc': feed.s_tvoc || (Math.random() * 10 + 105),
       'windspeed': feed.s_w0 || (Math.random() * 2)
@@ -116,8 +120,11 @@ async function fetchData() {
 
     const timeStr = new Date().toLocaleTimeString('zh-TW', { hour12: false });
 
+    // Update UI Cards and History Arrays
     Object.keys(dataMap).forEach(key => {
       const val = parseFloat(dataMap[key]);
+      
+      // Update History
       historyData[key].values.push(val);
       historyData[key].times.push(timeStr);
       if (historyData[key].values.length > 20) {
@@ -125,10 +132,15 @@ async function fetchData() {
         historyData[key].times.shift();
       }
 
+      // Update Dashboard Cards
       const cardIdMap = {
-        'pm25': 'pm25-value', 'temperature': 'temperature-card',
-        'humidity': 'humidity-card', 'sunlight': 'sunlight-card',
-        'windspeed': 'windspeed-card', 'co2': 'co2-card', 'tvoc': 'tvoc-card'
+        'pm25': 'pm25-value',
+        'temperature': 'temperature-card',
+        'humidity': 'humidity-card',
+        'sunlight': 'sunlight-card',
+        'windspeed': 'windspeed-card',
+        'co2': 'co2-card',
+        'tvoc': 'tvoc-card'
       };
       
       const el = document.getElementById(cardIdMap[key]);
@@ -149,13 +161,17 @@ async function fetchData() {
   }
 }
 
+// --- Modal Helper ---
 function openModal(type) {
   const modal = document.getElementById('history-modal');
   if (!historyData[type]) return;
+
   modal.classList.add('active');
   document.getElementById('modal-title').textContent = `${historyData[type].label} 歷史數據`;
+
   const ctx = document.getElementById('historyChart').getContext('2d');
   if (chartInstance) chartInstance.destroy();
+
   chartInstance = new Chart(ctx, {
     type: 'line',
     data: {
