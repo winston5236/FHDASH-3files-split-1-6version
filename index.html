@@ -67,8 +67,14 @@
       <main class="main" id="standard-layout">
         <section class="top-block columns">
           <div class="pm25" id="pm25-card">
-            <div class="pm25-label">PM2.5</div>
-            <div class="pm25-value" id="pm25-value">-- μg/m³</div>
+            <div class="gauge-container">
+              <canvas id="pm25Gauge"></canvas>
+              <div class="gauge-center-text">
+                <div class="pm25-label">PM2.5</div>
+                <div class="pm25-value" id="pm25-value">--</div>
+                <div id="pm25-status-badge">---</div>
+              </div>
+            </div>
           </div>
           <div class="right-stack">
             <div class="right-card" id="temperature-card">-- °C</div>
@@ -121,7 +127,7 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="history-modal" style="display: none;">
+  <div class="modal-overlay" id="history-modal">
     <div class="modal-content">
       <div class="modal-header">
         <h1 class="modal-title" id="modal-title">歷史數據趨勢</h1>
@@ -130,10 +136,6 @@
       <div class="modal-body">
         <div style="position: relative; height:300px; width:100%;">
           <canvas id="historyChart"></canvas>
-        </div>
-        <div id="modal-info" style="margin-top: 15px; color: #555; font-size: 0.9rem;">
-          <p id="modal-description">正在顯示最近 20 筆記錄的數據變化。</p>
-          <p id="modal-type-label" style="display:none;"></p>
         </div>
       </div>
     </div>
