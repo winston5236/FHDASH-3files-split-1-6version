@@ -17,32 +17,23 @@ document.addEventListener('DOMContentLoaded', () => {
     updateClock();
     setInterval(updateClock, 1000);
 
-    const dropdownBtn = document.getElementById('source-selector');
-    const dropdownList = document.getElementById('source-list');
+    const btn = document.getElementById('source-selector');
+    const list = document.getElementById('source-list');
 
-    // Dropdown toggle
-    dropdownBtn.onclick = (e) => {
-        e.stopPropagation();
-        dropdownList.classList.toggle('hidden');
-    };
+    btn.onclick = (e) => { e.stopPropagation(); list.classList.toggle('hidden'); };
+    window.onclick = () => list.classList.add('hidden');
 
-    // Close dropdown on outside click
-    window.onclick = () => dropdownList.classList.add('hidden');
-
-    // Switch logic
     document.querySelectorAll('#source-list li').forEach(li => {
         li.onclick = () => {
             currentSource = li.dataset.source;
-            dropdownBtn.textContent = sourceConfig[currentSource].name + " ▼";
+            btn.textContent = sourceConfig[currentSource].name + " ▼";
             switchPage();
         };
     });
 
-    // Modal Close
-    const modal = document.getElementById('history-modal');
-    document.getElementById('modal-close').onclick = () => modal.classList.remove('active');
+    document.getElementById('modal-close').onclick = () => 
+        document.getElementById('history-modal').classList.remove('active');
 
-    // Initial load
     switchPage();
 });
 
@@ -53,7 +44,6 @@ function switchPage() {
     const plant = document.getElementById('plant-layout');
     const none = document.getElementById('no-data-layout');
 
-    // Hide everything first
     [std, plant, none].forEach(el => el.classList.add('hidden'));
 
     const config = sourceConfig[currentSource];
@@ -68,7 +58,7 @@ function switchPage() {
         dataFetchInterval = setInterval(fetchPlantData, 30000);
     } else {
         none.classList.remove('hidden');
-        updateDataStatus("⚠️ 無數據源", "#999");
+        updateStatus("⚠️ 無數據源", "#999");
     }
 }
 
@@ -79,21 +69,16 @@ async function fetchLassData() {
         const data = await res.json();
         const feed = data.feeds[0][Object.keys(data.feeds[0])[0]];
 
-        const pm25 = parseFloat(feed.s_d0 || feed.pm25);
-        const temp = parseFloat(feed.s_t0 || feed.s_t1);
-        const humi = parseFloat(feed.s_h0 || feed.s_h1);
-
+        const pm25 = parseFloat(feed.s_d0 || feed.pm25 || 0);
         updatePM25Gauge(pm25);
-        document.getElementById('temperature-card').textContent = `${temp.toFixed(1)} °C`;
-        document.getElementById('humidity-card').textContent = `${humi.toFixed(1)} %`;
-        document.getElementById('precipitation-card').textContent = `${calculatePrecip(humi, temp)} %`;
-        document.getElementById('windspeed-card').textContent = `${(feed.s_w0 || 0).toFixed(1)} m/s`;
-        document.getElementById('sunlight-card').textContent = `${(feed.s_l0 || 350).toFixed(0)} lux`;
         
-        updateDataStatus("✅ 連線正常", "#2e7d32");
-    } catch (e) {
-        updateDataStatus("❌ 數據讀取失敗", "#c62828");
-    }
+        document.getElementById('temperature-card').textContent = `${(feed.s_t0 || 0).toFixed(1)} °C`;
+        document.getElementById('humidity-card').textContent = `${(feed.s_h0 || 0).toFixed(1)} %`;
+        document.getElementById('sunlight-card').textContent = `${(feed.s_l0 || 300).toFixed(0)} lux`;
+        document.getElementById('windspeed-card').textContent = `${(feed.s_w0 || 0).toFixed(1)} m/s`;
+        
+        updateStatus("✅ 連線正常", "#2e7d32");
+    } catch (e) { updateStatus("❌ 獲取失敗", "#c62828"); }
 }
 
 async function fetchPlantData() {
@@ -105,15 +90,8 @@ async function fetchPlantData() {
         document.getElementById('plant-temperature').textContent = `${data.temperature} °C`;
         document.getElementById('plant-soil-humidity').textContent = `${data.soil_moisture} %`;
         document.getElementById('plant-co2').textContent = `${data.co2} ppm`;
-        updateDataStatus("✅ 植物數據更新", "#2e7d32");
-    } catch (e) {
-        updateDataStatus("❌ 植物數據錯誤", "#c62828");
-    }
-}
-
-function calculatePrecip(h, t) {
-    let chance = h > 70 ? Math.pow((h - 70) / 30, 2) * 100 : 0;
-    return Math.min(Math.round(chance), 99);
+        updateStatus("✅ 植物數據更新", "#2e7d32");
+    } catch (e) { updateStatus("❌ 讀取錯誤", "#c62828"); }
 }
 
 function initPM25Gauge() {
@@ -128,12 +106,11 @@ function initPM25Gauge() {
 function updatePM25Gauge(val) {
     let color = '#3aa02d', status = "良好";
     if(val > 35) { color = '#ff9800'; status = "普通"; }
-    if(val > 54) { color = '#f44336'; status = "有害"; }
+    if(val > 54) { color = '#f44336'; status = "不健康"; }
 
-    document.getElementById('pm25-value').textContent = val;
+    document.getElementById('pm25-value').textContent = val.toFixed(1);
     const badge = document.getElementById('pm25-status-badge');
-    badge.textContent = status;
-    badge.style.backgroundColor = color;
+    badge.textContent = status; badge.style.backgroundColor = color;
 
     pm25GaugeChart.data.datasets[0].data = [Math.min(val, 100), 100 - Math.min(val, 100)];
     pm25GaugeChart.data.datasets[0].backgroundColor[0] = color;
@@ -143,11 +120,10 @@ function updatePM25Gauge(val) {
 function updateClock() {
     const now = new Date();
     document.getElementById('time-display').textContent = now.toLocaleTimeString();
-    document.getElementById('date-display').textContent = now.toLocaleDateString();
+    document.getElementById('date-display').textContent = now.toLocaleDateString('zh-TW', { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
-function updateDataStatus(msg, color) {
+function updateStatus(msg, color) {
     const el = document.getElementById('data-status');
-    el.textContent = msg;
-    el.style.color = color;
+    el.textContent = msg; el.style.color = color;
 }
