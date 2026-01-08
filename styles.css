@@ -1,60 +1,64 @@
-/* Global Reset */
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: sans-serif; background: #f0f0f0; overflow: hidden; height: 100vh; }
+body { font-family: -apple-system, sans-serif; background: #f4f4f4; height: 100vh; overflow: hidden; }
 
 /* Header */
-.header { height: 60px; background: #d9cecd; display: flex; align-items: center; padding: 0 20px; font-weight: bold; position: relative; }
-#data-status { position: absolute; right: 20px; font-size: 12px; }
+.header { height: 60px; background: #e0d8d7; display: flex; align-items: center; padding: 0 25px; font-weight: 600; font-size: 1.1rem; position: relative; }
+#data-status { position: absolute; right: 25px; font-size: 0.8rem; padding: 5px 12px; border-radius: 15px; background: #fff; }
 
-/* Layout container */
-.app-container { height: calc(100vh - 60px); display: flex; }
-.app { display: flex; width: 100%; }
+/* Main Layout */
+.app-container { display: flex; height: calc(100vh - 60px); }
 
 /* Sidebar */
-.sidebar { width: 260px; background: #4a4545; padding: 20px; color: white; display: flex; flex-direction: column; }
-.dropdown-container { position: relative; margin-bottom: 20px; }
-.dropdown-btn { width: 100%; padding: 12px; border-radius: 6px; border: none; background: white; cursor: pointer; text-align: left; font-weight: bold; }
-.dropdown-list { position: absolute; top: 100%; left: 0; right: 0; background: #5b5555; list-style: none; border-radius: 0 0 6px 6px; overflow: hidden; z-index: 100; }
-.dropdown-list li { padding: 12px; cursor: pointer; border-bottom: 1px solid #666; }
-.dropdown-list li:hover { background: #777; }
-.menu div { padding: 12px; border: 1px solid #777; margin-bottom: 10px; border-radius: 6px; text-align: center; cursor: pointer; font-size: 14px; }
-.clock { margin-top: auto; background: #333; padding: 15px; border-radius: 10px; display: flex; align-items: center; gap: 10px; }
-#clock-svg { width: 40px; height: 40px; }
+.sidebar { width: 260px; background: #4a4545; color: white; padding: 20px; display: flex; flex-direction: column; flex-shrink: 0; }
+.dropdown-container { position: relative; margin-bottom: 25px; }
+.dropdown-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; background: white; text-align: left; font-weight: bold; cursor: pointer; }
+.dropdown-list { position: absolute; top: 100%; left: 0; right: 0; background: #5a5555; border-radius: 0 0 8px 8px; list-style: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.dropdown-list li { padding: 12px; border-bottom: 1px solid #6a6565; cursor: pointer; }
+.dropdown-list li:hover { background: #6a6565; }
 
-/* Main Area */
-.main { flex: 1; padding: 20px; position: relative; }
-.layout-container { display: flex; flex-direction: column; gap: 20px; height: 100%; width: 100%; }
+.menu div { padding: 12px; border: 1px solid #7a7575; border-radius: 8px; margin-bottom: 12px; text-align: center; cursor: pointer; font-size: 0.9rem; }
+.menu div:hover { background: #5a5555; }
+
+.clock-panel { margin-top: auto; background: #3a3535; padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 12px; }
+.clock-icon { width: 45px; height: 45px; }
+.clock-text { font-size: 0.75rem; }
+
+/* Content Area */
+.main-content { flex: 1; padding: 25px; position: relative; height: 100%; }
+.view-container { display: flex; flex-direction: column; gap: 20px; height: 100%; width: 100%; }
 .hidden { display: none !important; }
 
-/* Standard Layout Elements */
-.top-row { flex: 2; display: flex; gap: 20px; }
-.bottom-row { flex: 1; display: flex; gap: 20px; }
+/* Standard View Grid */
+.row-top { flex: 3; display: flex; gap: 20px; }
+.row-bottom { flex: 2; display: flex; gap: 20px; }
 
-.pm25-box { flex: 2; background: #e8e8e8; border-radius: 20px; position: relative; display: flex; align-items: center; justify-content: center; }
-.gauge-wrapper { width: 300px; height: 300px; position: relative; }
-.gauge-text { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
-.gauge-text .value { font-size: 48px; font-weight: bold; }
-#pm25-status-badge { padding: 4px 12px; border-radius: 10px; color: white; font-size: 12px; margin-top: 5px; }
+.gauge-card { flex: 2; background: #ebebeb; border-radius: 25px; display: flex; align-items: center; justify-content: center; }
+.canvas-container { width: 80%; height: 80%; position: relative; }
+.gauge-overlay { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+.gauge-overlay .value { font-size: 3.5rem; font-weight: 800; color: #333; }
+#pm25-status-badge { padding: 4px 15px; border-radius: 20px; color: white; font-weight: bold; font-size: 0.8rem; margin-top: 5px; display: inline-block; }
 
-.side-stack { flex: 1; display: flex; flex-direction: column; gap: 15px; }
-.triple-group { flex: 2; background: #e8e8e8; border-radius: 20px; display: flex; overflow: hidden; }
-.triple-group .segment { flex: 1; border-right: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-.double-group { flex: 1; display: flex; gap: 15px; }
+.stack-card { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+.triple-card { flex: 2; background: #ebebeb; border-radius: 25px; display: flex; overflow: hidden; }
+.triple-card .segment { flex: 1; border-right: 1px solid #dadada; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+.double-card { flex: 1; display: flex; gap: 15px; }
 
-.card { background: #e8e8e8; border-radius: 20px; flex: 1; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; }
+.data-box { flex: 1; background: #ebebeb; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 600; }
 
-/* Plant Layout Elements */
-.plant-hero { flex: 1.5; background: #e8e8e8; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+/* Plant View Grid */
+.plant-hero { flex: 1.5; background: #ebebeb; border-radius: 25px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.plant-hero .value { font-size: 4rem; font-weight: bold; }
 .plant-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.p-card { background: #e8e8e8; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.p-label { font-size: 14px; color: #666; }
-.p-val { font-size: 20px; font-weight: bold; }
+.p-box { background: #ebebeb; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.p-label { font-size: 0.85rem; color: #777; margin-bottom: 5px; }
+.p-val { font-size: 1.4rem; font-weight: bold; }
 
-/* No Data Screen */
-.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #ddd; border-radius: 20px; color: #777; }
+/* No Data State */
+.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #ddd; border-radius: 25px; color: #888; }
 
-/* Modal */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; }
+/* Modal Styles */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; }
 .modal-overlay.active { display: flex; }
-.modal-content { background: white; width: 80%; height: 70%; border-radius: 20px; padding: 40px; position: relative; }
-.modal-close { position: absolute; top: 15px; right: 20px; font-size: 40px; background: none; border: none; cursor: pointer; color: #ccc; }
+.modal-content { background: white; width: 85%; height: 75%; border-radius: 20px; padding: 40px; position: relative; }
+.modal-close { position: absolute; top: 15px; right: 20px; font-size: 3rem; border: none; background: none; cursor: pointer; color: #ccc; }
+.chart-box { width: 100%; height: 90%; }
