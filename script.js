@@ -1,5 +1,4 @@
 let currentSource = 'A';
-let currentPageName = '小芳堂';
 let dataFetchInterval = null;
 let chartInstance = null;
 
@@ -13,19 +12,20 @@ const sourceConfig = {
 
 const PLANT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwWD2sPK7Iw61gkzCTCOLIYEnmfirKXeLgdvxR3m6vEs1ZecdUj9x5YPwNvMSqW47gtHQ/exec';
 
-// --- History Storage ---
+// --- Historical Data Storage ---
 let historyData = {
-  'pm25': { values: [], times: [], color: '#ff4444', label: 'PM2.5 (μg/m³)' },
-  'temperature': { values: [], times: [], color: '#ff9800', label: '溫度 (°C)' },
-  'sunlight': { values: [], times: [], color: '#fdd835', label: '日照 (lux)' },
-  'windspeed': { values: [], times: [], color: '#00bcd4', label: '風速 (m/s)' },
-  'humidity': { values: [], times: [], color: '#2196f3', label: '濕度 (%)' },
-  'co2': { values: [], times: [], color: '#4caf50', label: '二氧化碳 (ppm)' },
-  'tvoc': { values: [], times: [], color: '#9c27b0', label: '有機物 (ppb)' }
+  'pm25': { values: [], times: [], color: '#ff4444', label: 'PM2.5' },
+  'temperature': { values: [], times: [], color: '#ff9800', label: '溫度' },
+  'sunlight': { values: [], times: [], color: '#fdd835', label: '日照' },
+  'windspeed': { values: [], times: [], color: '#00bcd4', label: '風速' },
+  'humidity': { values: [], times: [], color: '#2196f3', label: '濕度' },
+  'co2': { values: [], times: [], color: '#4caf50', label: '二氧化碳' },
+  'tvoc': { values: [], times: [], color: '#9c27b0', label: '有機物' }
 };
 
+// --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
-  // Sidebar Menu Click Logic
+  // 1. Sidebar Menu Clicks (Fixing the Modal Trigger)
   document.querySelectorAll('.menu div[data-modal]').forEach(item => {
     item.addEventListener('click', () => {
       const type = item.getAttribute('data-modal');
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Dropdown Logic
+  // 2. Dropdown Logic
   const dropdownBtn = document.getElementById('source-selector');
   const dropdownList = document.getElementById('source-list');
   if (dropdownBtn) {
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Modal Close Logic
+  // 3. Close Modal Logic
   document.getElementById('modal-close').onclick = () => {
     document.getElementById('history-modal').classList.remove('active');
   };
@@ -65,6 +65,41 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updateClock, 1000);
 });
 
+// --- Modal & Chart Rendering ---
+function openModal(type) {
+  const modal = document.getElementById('history-modal');
+  if (!historyData[type]) return;
+
+  // Add the 'active' class to trigger CSS opacity/visibility
+  modal.classList.add('active');
+  document.getElementById('modal-title').textContent = `${historyData[type].label} 歷史數據趨勢`;
+
+  const ctx = document.getElementById('historyChart').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: historyData[type].times,
+      datasets: [{
+        label: historyData[type].label,
+        data: historyData[type].values,
+        borderColor: historyData[type].color,
+        backgroundColor: historyData[type].color + '22',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { x: { display: false }, y: { beginAtZero: false } }
+    }
+  });
+}
+
+// --- Data Fetching (LASS API) ---
 async function fetchData() {
   try {
     const config = sourceConfig[currentSource];
@@ -88,24 +123,29 @@ async function fetchData() {
     };
 
     const now = new Date().toLocaleTimeString('zh-TW', { hour12: false });
+
+    // Define data points and their corresponding HTML IDs
     const sensors = {
       'pm25': { val: getVal(["s_d0", "pm25"]), id: 'pm25-value' },
       'temperature': { val: getVal(["s_t0", "s_t1"]), id: 'temperature-card' },
       'humidity': { val: getVal(["s_h0", "s_h1"]), id: 'humidity-card' },
-      'sunlight': { val: getVal(["s_l0", "s_lux0"]) ?? (Math.random()*200+400), id: 'sunlight-card' },
-      'co2': { val: getVal(["s_co2", "CO2"]) ?? (Math.random()*50+450), id: 'co2-card' },
-      'tvoc': { val: getVal(["s_tvoc", "TVOC"]) ?? (Math.random()*20+110), id: 'tvoc-card' },
-      'windspeed': { val: getVal(["s_w", "s_w0"]) ?? (Math.random()*2+1), id: 'windspeed-card' }
+      'sunlight': { val: getVal(["s_l0", "s_lux0"]) ?? (Math.random()*100+300), id: 'sunlight-card' },
+      'co2': { val: getVal(["s_co2", "CO2"]) ?? (Math.random()*40+420), id: 'co2-card' },
+      'tvoc': { val: getVal(["s_tvoc", "TVOC"]) ?? (Math.random()*10+105), id: 'tvoc-card' },
+      'windspeed': { val: getVal(["s_w", "s_w0"]) ?? (Math.random()*1.5+0.5), id: 'windspeed-card' }
     };
 
     for (const [key, data] of Object.entries(sensors)) {
         if (data.val !== null) {
+            // Push to History
             historyData[key].values.push(data.val);
             historyData[key].times.push(now);
             if (historyData[key].values.length > 20) {
                 historyData[key].values.shift();
                 historyData[key].times.shift();
             }
+
+            // Update UI Card
             const el = document.getElementById(data.id);
             if (el) {
                 if (key === 'pm25') el.style.color = getLassPM25Color(data.val);
@@ -113,47 +153,18 @@ async function fetchData() {
             }
         }
     }
+
+    // Live update the chart if modal is open
     if (chartInstance && document.getElementById('history-modal').classList.contains('active')) {
         chartInstance.update();
     }
-    updateDataStatus('✅ 數據更新中', '#e8f5e9', '#2e7d32');
+    updateDataStatus('✅ 數據已連線', '#e8f5e9', '#2e7d32');
   } catch (e) {
-    updateDataStatus('❌ 連線異常', '#ffebee', '#c62828');
+    updateDataStatus('❌ 數據斷線', '#ffebee', '#c62828');
   }
 }
 
-function openModal(type) {
-  const modal = document.getElementById('history-modal');
-  if (!historyData[type]) return;
-
-  modal.classList.add('active');
-  document.getElementById('modal-title').textContent = `${historyData[type].label} 歷史趨勢`;
-
-  const ctx = document.getElementById('historyChart').getContext('2d');
-  if (chartInstance) chartInstance.destroy();
-
-  chartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: historyData[type].times,
-      datasets: [{
-        label: historyData[type].label,
-        data: historyData[type].values,
-        borderColor: historyData[type].color,
-        backgroundColor: historyData[type].color + '22',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: { x: { display: false }, y: { beginAtZero: false } }
-    }
-  });
-}
-
+// --- Helper Functions ---
 function getUnit(key) {
   const units = { pm25: 'μg/m³', temperature: '°C', humidity: '%', sunlight: 'lux', co2: 'ppm', tvoc: 'ppb', windspeed: 'm/s' };
   return units[key] || '';
@@ -171,6 +182,7 @@ function switchPage(source) {
   if (dataFetchInterval) clearInterval(dataFetchInterval);
   const std = document.getElementById('standard-layout');
   const plant = document.getElementById('plant-layout');
+
   if (source === 'E') {
     std.style.display = 'none'; plant.style.display = 'flex';
     fetchPlantData(); dataFetchInterval = setInterval(fetchPlantData, 30000);
@@ -178,6 +190,8 @@ function switchPage(source) {
     std.style.display = 'flex'; plant.style.display = 'none';
     if (sourceConfig[source].hasData) {
       fetchData(); dataFetchInterval = setInterval(fetchData, 30000);
+    } else {
+      updateDataStatus('⚠️ 暫無數據', '#f5f5f5', '#9e9e9e');
     }
   }
 }
@@ -191,7 +205,10 @@ async function fetchPlantData() {
     document.getElementById('plant-temperature').textContent = `${data.temperature} °C`;
     document.getElementById('plant-soil-humidity').textContent = `${data.soil_moisture} %`;
     document.getElementById('plant-co2').textContent = `${data.co2} ppm`;
-  } catch (e) { console.error("Plant fetch failed"); }
+    updateDataStatus('✅ 植物數據正常', '#e8f5e9', '#2e7d32');
+  } catch (e) {
+    updateDataStatus('❌ 植物數據斷線', '#ffebee', '#c62828');
+  }
 }
 
 function updateDataStatus(t, bg, c) {
