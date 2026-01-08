@@ -173,16 +173,8 @@ body {
   gap: 24px; 
 }
 
-/* Row Proportions */
-.top-block { 
-  flex: 2.2; 
-  min-height: 0; 
-}
-
-.bottom-block { 
-  flex: 1; 
-  min-height: 0; 
-}
+.top-block { flex: 2.2; min-height: 0; }
+.bottom-block { flex: 1; min-height: 0; }
 
 /* PM2.5 Radial Gauge Box */
 .pm25 { 
@@ -212,25 +204,14 @@ body {
   transform: translate(-50%, -45%); 
   text-align: center; 
   width: 100%; 
-  /* Critical fix: ensures children are centered and not stretched */
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.pm25-label { 
-  font-size: 18px; 
-  color: #666; 
-}
+.pm25-label { font-size: 18px; color: #666; }
+.pm25-value { font-size: 52px; font-weight: 700; color: #333; line-height: 1.1; }
 
-.pm25-value { 
-  font-size: 52px; 
-  font-weight: 700; 
-  color: #333; 
-  line-height: 1.1; 
-}
-
-/* REFINED COMPACT STATUS BADGE */
 #pm25-status-badge { 
   margin-top: 8px; 
   padding: 4px 14px; 
@@ -240,95 +221,79 @@ body {
   color: #fff; 
   background: #999; 
   display: block;
-  width: fit-content; /* Locks width to text length */
+  width: fit-content;
   min-width: 50px;
   white-space: nowrap;
 }
 
-/* Right Stack Cards */
-.right-stack { 
-  grid-column: 3; 
-  display: flex; 
-  flex-direction: column; 
-  gap: 16px; 
-  height: 100%; 
+/* Other Cards */
+.right-stack { grid-column: 3; display: flex; flex-direction: column; gap: 16px; height: 100%; }
+.right-card { flex: 1; background: #e8e8e8; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #333; }
+
+.connected-group { grid-column: 1 / span 2; background: #e8e8e8; border-radius: 24px; display: flex; overflow: hidden; height: 100%; }
+.connected-card { flex: 1; border-right: 1px solid #ddd; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #333; }
+.connected-card:last-child { border-right: none; }
+
+.small-card-row { grid-column: 3; display: flex; gap: 24px; height: 100%; }
+.small-card { flex: 1; background: #e8e8e8; border-radius: 24px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #333; }
+
+/* ================= ORIGINAL MODAL STYLING (RESTORED) ================= */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
 }
 
-.right-card { 
-  flex: 1; 
-  background: #e8e8e8; 
-  border-radius: 20px; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  font-size: 18px; 
-  color: #333;
-}
-
-/* Bottom Row */
-.connected-group { 
-  grid-column: 1 / span 2; 
-  background: #e8e8e8; 
-  border-radius: 24px; 
-  display: flex; 
-  overflow: hidden; 
-  height: 100%; 
-}
-
-.connected-card { 
-  flex: 1; 
-  border-right: 1px solid #ddd; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  font-size: 18px; 
-  color: #333;
-}
-
-.connected-card:last-child { 
-  border-right: none; 
-}
-
-.small-card-row { 
-  grid-column: 3; 
-  display: flex; 
-  gap: 24px; 
-  height: 100%; 
-}
-
-.small-card { 
-  flex: 1; 
-  background: #e8e8e8; 
-  border-radius: 24px; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  font-size: 18px; 
-  color: #333;
-}
-
-/* ================= Modal ================= */
-.modal-overlay { 
-  position: fixed; 
-  top: 0; 
-  left: 0; 
-  width: 100%; 
-  height: 100%; 
-  background: rgba(0,0,0,0.7); 
-  display: none; 
-  align-items: center; 
-  justify-content: center; 
-  z-index: 2000; 
-}
-
-.modal-overlay.active { 
-  display: flex; 
+.modal-overlay.active {
+  display: flex;
 }
 
 .modal-content {
   background: #fff;
-  width: 80%;
-  max-width: 800px;
+  width: 85%;
+  max-width: 900px;
+  height: 75%;
   border-radius: 20px;
-  padding: 30px;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  border-bottom: 2px solid #eee;
+}
+
+.modal-title {
+  font-size: 24px;
+  color: #333;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 36px;
+  cursor: pointer;
+  color: #bbb;
+}
+
+.modal-body {
+  flex: 1;
+  min-height: 0; /* Important for flex child with chart */
+}
+
+/* Ensure the chart takes up the space */
+#historyChart {
+  width: 100% !important;
+  height: 100% !important;
 }
