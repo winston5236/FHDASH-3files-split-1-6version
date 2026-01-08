@@ -1,61 +1,380 @@
-/* ================= Global & Header ================= */
-* { box-sizing: border-box; }
-body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: #f2f2f2; overflow: hidden; }
-.header { height: 70px; background: #d9cecd; color: #333; display: flex; align-items: center; padding: 0 24px; font-size: 18px; font-weight: 500; position: relative; z-index: 100; }
-#data-status { position: absolute; right: 24px; padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+/* ================= Global Styling ================= */
+* { 
+  box-sizing: border-box; 
+}
 
-/* ================= App Structure ================= */
-.app-container { display: flex; flex-direction: column; height: calc(100vh - 70px); }
-.app { display: flex; flex: 1; overflow: hidden; }
-.sidebar { width: 260px; background: #4a4545; color: #fff; padding: 20px; display: flex; flex-direction: column; }
-.main { flex: 1; padding: 24px; display: flex; flex-direction: column; gap: 24px; overflow-y: auto; }
+body { 
+  margin: 0; 
+  font-family: system-ui, -apple-system, sans-serif; 
+  background: #f2f2f2; 
+  overflow: hidden; 
+}
 
-/* ================= Sidebar UI ================= */
-.menu { display: flex; flex-direction: column; gap: 10px; }
-.menu div { padding: 12px 16px; border-radius: 8px; border: 1px solid #777; font-size: 14px; cursor: pointer; transition: background 0.2s; background: #4a4545; color: #fff; }
-.menu div:hover { background: #666; }
-.dropdown-container { position: relative; margin-bottom: 10px; }
-.dropdown-btn { padding: 12px 16px; border-radius: 8px; border: 1px solid #777; font-size: 14px; cursor: pointer; background: #fff !important; color: #333 !important; width: 100%; text-align: left; }
-.dropdown-list { position: absolute; top: 100%; left: 0; right: 0; background: #4a4545; border: 1px solid #777; border-radius: 8px; list-style: none; padding: 0; margin: 0; z-index: 1000; }
-.dropdown-list li { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #5a5555; }
-.hidden { display: none; }
+/* ================= Top Header ================= */
+.header { 
+  height: 70px; 
+  background: #d9cecd; 
+  color: #333; 
+  display: flex; 
+  align-items: center; 
+  padding: 0 24px; 
+  font-size: 18px; 
+  font-weight: 500; 
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+  position: relative; 
+  z-index: 100; 
+}
+
+#data-status { 
+  position: absolute; 
+  right: 24px; 
+  padding: 6px 12px; 
+  border-radius: 12px; 
+  font-size: 12px; 
+  font-weight: 500; 
+}
+
+/* ================= App Container ================= */
+.app-container { 
+  display: flex; 
+  flex-direction: column; 
+  height: calc(100vh - 70px); 
+}
+
+.app { 
+  display: flex; 
+  flex: 1; 
+  overflow: hidden; 
+}
+
+/* ================= Sidebar ================= */
+.sidebar { 
+  width: 260px; 
+  background: #4a4545; 
+  color: #fff; 
+  padding: 20px; 
+  display: flex; 
+  flex-direction: column; 
+}
+
+.menu { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+}
+
+.menu div { 
+  padding: 12px 16px; 
+  border-radius: 8px; 
+  border: 1px solid #777; 
+  font-size: 14px; 
+  cursor: pointer; 
+  transition: background 0.2s; 
+  background: #4a4545; 
+  color: #fff; 
+}
+
+.menu div:hover { 
+  background: #666; 
+}
+
+.dropdown-container { 
+  position: relative; 
+  margin-bottom: 10px; 
+}
+
+.dropdown-btn { 
+  padding: 12px 16px; 
+  border-radius: 8px; 
+  border: 1px solid #777; 
+  font-size: 14px; 
+  cursor: pointer; 
+  background: #fff !important; 
+  color: #333 !important; 
+  width: 100%; 
+  text-align: left; 
+}
+
+.dropdown-list { 
+  position: absolute; 
+  top: 100%; 
+  left: 0; 
+  right: 0; 
+  background: #4a4545; 
+  border: 1px solid #777; 
+  border-radius: 8px; 
+  list-style: none; 
+  padding: 0; 
+  margin: 0; 
+  z-index: 1000; 
+}
+
+.dropdown-list li { 
+  padding: 12px 16px; 
+  cursor: pointer; 
+  border-bottom: 1px solid #5a5555; 
+}
+
+.dropdown-list li:hover { 
+  background: #5a5555; 
+}
+
+.hidden { 
+  display: none; 
+}
 
 /* ================= Clock ================= */
-.clock { margin-top: auto; height: 160px; border-radius: 16px; background: #5b5555; padding: 20px; display: flex; gap: 16px; color: #fff; align-items: center; }
-#clock-svg { width: 72px; height: 72px; }
-.clock-digital { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-.date-display { font-size: 13px; opacity: 0.9; }
-.time-display { font-size: 16px; font-weight: 600; font-family: monospace; }
+.clock { 
+  margin-top: auto; 
+  height: 160px; 
+  border-radius: 16px; 
+  background: #5b5555; 
+  padding: 20px; 
+  display: flex; 
+  gap: 16px; 
+  color: #fff; 
+  align-items: center; 
+}
 
-/* ================= Standard Layout ================= */
-#standard-layout { display: flex; flex-direction: column; gap: 24px; height: 100%; }
-.columns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
-.pm25 { grid-column: 1 / span 2; background: #e8e8e8; border-radius: 24px; display: flex; align-items: center; justify-content: center; position: relative; height: 350px; }
-.gauge-center-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -45%); text-align: center; display: flex; flex-direction: column; align-items: center; }
-.pm25-value { font-size: 52px; font-weight: 700; color: #333; line-height: 1.1; }
-#pm25-status-badge { margin-top: 8px; padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; color: #fff; background: #999; display: block; width: fit-content; min-width: 50px; }
+#clock-svg { 
+  width: 72px; 
+  height: 72px; 
+}
 
-.right-stack { grid-column: 3; display: flex; flex-direction: column; gap: 16px; }
-.right-card { flex: 1; background: #e8e8e8; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 18px; min-height: 80px; }
-.connected-group { grid-column: 1 / span 2; background: #e8e8e8; border-radius: 24px; display: flex; overflow: hidden; height: 180px; }
-.connected-card { flex: 1; border-right: 1px solid #ddd; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-.connected-card:last-child { border-right: none; }
-.small-card-row { grid-column: 3; display: flex; gap: 24px; height: 180px; }
-.small-card { flex: 1; background: #e8e8e8; border-radius: 24px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.clock-digital { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 4px; 
+}
 
-/* ================= Plant Layout ================= */
-#plant-layout { display: none; flex-direction: column; gap: 24px; height: 100%; }
-.plant-main-card { background: #e8e8e8; border-radius: 24px; padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 2; min-height: 300px; }
-.plant-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; flex: 1; }
-.plant-card { background: #e8e8e8; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-.plant-card-label { font-size: 14px; color: #666; margin-bottom: 8px; }
-.plant-card-value { font-size: 24px; font-weight: bold; color: #333; }
+.date-display { 
+  font-size: 13px; 
+  opacity: 0.9; 
+}
 
-/* ================= Modal ================= */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: none; align-items: center; justify-content: center; z-index: 2000; }
-.modal-overlay.active { display: flex; }
-.modal-content { background: #fff; width: 85%; max-width: 900px; height: 75%; border-radius: 20px; padding: 40px; display: flex; flex-direction: column; position: relative; }
-.modal-header { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
-.modal-close { position: absolute; top: 20px; right: 25px; background: none; border: none; font-size: 40px; cursor: pointer; color: #bbb; line-height: 1; }
-.modal-body { flex: 1; min-height: 0; }
-#historyChart { width: 100% !important; height: 100% !important; }
+.time-display { 
+  font-size: 16px; 
+  font-weight: 600; 
+  font-family: monospace; 
+}
+
+/* ================= Main Content Area ================= */
+.main { 
+  flex: 1; 
+  padding: 24px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 24px; 
+}
+
+.columns { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr 1fr; 
+  gap: 24px; 
+}
+
+.top-block { 
+  flex: 2.2; 
+  min-height: 0; 
+}
+
+.bottom-block { 
+  flex: 1; 
+  min-height: 0; 
+}
+
+/* PM2.5 Radial Gauge Box */
+.pm25 { 
+  grid-column: 1 / span 2; 
+  background: #e8e8e8; 
+  border-radius: 24px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  position: relative; 
+  height: 100%; 
+}
+
+.gauge-container { 
+  position: relative; 
+  height: 95%; 
+  aspect-ratio: 1 / 1; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+}
+
+.gauge-center-text { 
+  position: absolute; 
+  top: 50%; 
+  left: 50%; 
+  transform: translate(-50%, -45%); 
+  text-align: center; 
+  width: 100%; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+}
+
+.pm25-label { 
+  font-size: 18px; 
+  color: #666; 
+}
+
+.pm25-value { 
+  font-size: 52px; 
+  font-weight: 700; 
+  color: #333; 
+  line-height: 1.1; 
+}
+
+/* FIXED STATUS BADGE - Compact Pill Shape */
+#pm25-status-badge { 
+  margin-top: 8px; 
+  padding: 4px 14px; 
+  border-radius: 20px; 
+  font-size: 13px; 
+  font-weight: bold; 
+  color: #fff; 
+  background: #999; 
+  display: block; 
+  width: fit-content; 
+  min-width: 50px; 
+  white-space: nowrap; 
+}
+
+/* Right Stack Cards */
+.right-stack { 
+  grid-column: 3; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px; 
+  height: 100%; 
+}
+
+.right-card { 
+  flex: 1; 
+  background: #e8e8e8; 
+  border-radius: 20px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 18px; 
+  color: #333; 
+}
+
+/* Bottom Connected Row */
+.connected-group { 
+  grid-column: 1 / span 2; 
+  background: #e8e8e8; 
+  border-radius: 24px; 
+  display: flex; 
+  overflow: hidden; 
+  height: 100%; 
+}
+
+.connected-card { 
+  flex: 1; 
+  border-right: 1px solid #ddd; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 18px; 
+  color: #333; 
+}
+
+.connected-card:last-child { 
+  border-right: none; 
+}
+
+/* Small Cards Row */
+.small-card-row { 
+  grid-column: 3; 
+  display: flex; 
+  gap: 24px; 
+  height: 100%; 
+}
+
+.small-card { 
+  flex: 1; 
+  background: #e8e8e8; 
+  border-radius: 24px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 18px; 
+  color: #333; 
+}
+
+/* ================= MODAL STYLING ================= */
+.modal-overlay {
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%; 
+  background: rgba(0, 0, 0, 0.7); 
+  display: none; 
+  align-items: center; 
+  justify-content: center; 
+  z-index: 2000;
+}
+
+.modal-overlay.active { 
+  display: flex; 
+}
+
+.modal-content {
+  background: #fff; 
+  width: 85%; 
+  max-width: 900px; 
+  height: 75%; 
+  border-radius: 20px; 
+  padding: 40px; 
+  display: flex; 
+  flex-direction: column; 
+  position: relative; /* Anchor for absolute close button */
+}
+
+.modal-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 25px; 
+  border-bottom: 2px solid #eee; 
+  padding-bottom: 10px; 
+}
+
+.modal-title { 
+  font-size: 24px; 
+  color: #333; 
+  margin: 0; 
+}
+
+.modal-close {
+  position: absolute; 
+  top: 20px; 
+  right: 25px; 
+  background: none; 
+  border: none; 
+  font-size: 40px; 
+  cursor: pointer; 
+  color: #bbb; 
+  line-height: 1; 
+  transition: color 0.2s;
+}
+
+.modal-close:hover { 
+  color: #666; 
+}
+
+.modal-body { 
+  flex: 1; 
+  min-height: 0; 
+}
+
+#historyChart { 
+  width: 100% !important; 
+  height: 100% !important; 
+}
