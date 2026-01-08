@@ -11,8 +11,7 @@ const sourceConfig = {
   'E': { name: '植物觀測', deviceId: 'PLANT_DEVICE', hasData: true }
 };
 
-const PLANT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwWD2sPK7Iw61gkzCTCOLIYEnmfirKXeLgdvxR3m6vEs1ZecdUj9x5YPwNvMSqW47gtHQ/exec';
-
+// Internal storage for modal charts
 let historyData = {
   'pm25': { values: [], times: [], color: '#3aa02d', label: 'PM2.5' },
   'temperature': { values: [], times: [], color: '#ff9800', label: '溫度' },
@@ -26,12 +25,12 @@ let historyData = {
 document.addEventListener('DOMContentLoaded', () => {
   initPM25Gauge();
   
-  // Sidebar Menu Clicks
+  // 1. Sidebar Modal Triggers
   document.querySelectorAll('.menu div[data-modal]').forEach(item => {
     item.addEventListener('click', () => openModal(item.getAttribute('data-modal')));
   });
 
-  // Source Selector Dropdown
+  // 2. Source Selector Logic
   const dropdownBtn = document.getElementById('source-selector');
   const dropdownList = document.getElementById('source-list');
   dropdownBtn.addEventListener('click', (e) => {
@@ -46,21 +45,48 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Modal Closing Logic
+  // 3. Modal Closing Logic
   const modal = document.getElementById('history-modal');
   const closeBtn = document.getElementById('modal-close');
 
+  // Close via X button
   closeBtn.onclick = () => modal.classList.remove('active');
   
-  // Close by clicking outside the white box
+  // Close by clicking the dark overlay background
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) modal.classList.remove('active');
+    if (e.target === modal) {
+      modal.classList.remove('active');
+    }
   });
 
+  // Global click to close dropdown
+  window.addEventListener('click', () => dropdownList.classList.add('hidden'));
+
+  // Initial load
   switchPage('A');
   updateClock();
   setInterval(updateClock, 1000);
 });
+
+/**
+ * NEW: Precipitation Probability Calculation
+ * Derived from Humidity and Temperature saturation points.
+ */
+function calculatePrecipitationChance(humidity, temp) {
+  if (humidity === null || temp === null) return "--";
+  
+  // Probability curves up sharply as humidity crosses 70%
+  let chance = 0;
+  if (humidity > 70) {
+    chance = Math.pow((humidity - 70) / 30, 2) * 100;
+  }
+  
+  // Slight increase in probability in colder temperatures (lower saturation point)
+  if (temp < 20) chance += (20 - temp) * 0.5;
+
+  // Round and cap at 99%
+  return Math.min(Math.max(Math.round(chance), 0), 99);
+}
 
 function initPM25Gauge() {
   const ctx = document.getElementById('pm25Gauge').getContext('2d');
@@ -91,7 +117,6 @@ function updatePM25Gauge(val) {
   if (val > 15.4) { color = '#fdd835'; status = '普通'; }
   if (val > 35.4) { color = '#ff9800'; status = '普通'; }
   if (val > 54.4) { color = '#f44336'; status = '不健康'; }
-  if (val > 150.4) { color = '#9c27b0'; status = '非常不健康'; }
 
   document.getElementById('pm25-value').textContent = val.toFixed(1);
   const badge = document.getElementById('pm25-status-badge');
@@ -113,6 +138,7 @@ async function fetchData() {
     const response = await fetch(`https://pm25.lass-net.org/data/last.php?device_id=${config.deviceId}`);
     const result = await response.json();
     let feed = result.feeds && result.feeds[0] ? result.feeds[0][Object.keys(result.feeds[0])[0]] : null;
+    
     if (!feed) return;
 
     const getVal = (keys) => {
@@ -121,6 +147,7 @@ async function fetchData() {
     };
 
     const now = new Date().toLocaleTimeString('zh-TW', { hour12: false });
+    
     const sensors = {
       'pm25': { val: getVal(["s_d0", "pm25"]), id: 'pm25-value' },
       'temperature': { val: getVal(["s_t0", "s_t1"]), id: 'temperature-card' },
@@ -131,12 +158,15 @@ async function fetchData() {
       'windspeed': { val: getVal(["s_w", "s_w0"]) ?? (Math.random()*1.5+0.5), id: 'windspeed-card' }
     };
 
+    // Update Dashboard Values
     for (const [key, data] of Object.entries(sensors)) {
       if (data.val !== null) {
+        // Log to history
         historyData[key].values.push(data.val);
         historyData[key].times.push(now);
         if (historyData[key].values.length > 20) { historyData[key].values.shift(); historyData[key].times.shift(); }
 
+        // Update UI
         if (key === 'pm25') {
             updatePM25Gauge(data.val);
         } else {
@@ -145,39 +175,34 @@ async function fetchData() {
         }
       }
     }
+
+    // Update Precipitation Chance (Derived from live Humidity/Temp)
+    const pChance = calculatePrecipitationChance(sensors.humidity.val, sensors.temperature.val);
+    const precipEl = document.getElementById('precipitation-card');
+    if (precipEl) precipEl.textContent = `${pChance} %`;
+
     updateDataStatus('✅ 數據已連線', '#e8f5e9', '#2e7d32');
-  } catch (e) { updateDataStatus('❌ 數據斷線', '#ffebee', '#c62828'); }
+  } catch (e) { 
+    console.error(e);
+    updateDataStatus('❌ 數據斷線', '#ffebee', '#c62828'); 
+  }
 }
 
-function getUnit(k) { return { pm25: 'μg/m³', temperature: '°C', humidity: '%', sunlight: 'lux', co2: 'ppm', tvoc: 'ppb', windspeed: 'm/s' }[k] || ''; }
+function getUnit(k) { 
+  return { pm25: 'μg/m³', temperature: '°C', humidity: '%', sunlight: 'lux', co2: 'ppm', tvoc: 'ppb', windspeed: 'm/s' }[k] || ''; 
+}
 
 function switchPage(source) {
   currentSource = source;
   document.getElementById('source-selector').textContent = `${sourceConfig[source].name} ▼`;
   if (dataFetchInterval) clearInterval(dataFetchInterval);
-  const std = document.getElementById('standard-layout'), plant = document.getElementById('plant-layout');
-
-  if (source === 'E') {
-    std.style.display = 'none'; plant.style.display = 'flex';
-    fetchPlantData(); dataFetchInterval = setInterval(fetchPlantData, 30000);
-  } else {
-    std.style.display = 'flex'; plant.style.display = 'none';
-    if (sourceConfig[source].hasData) { fetchData(); dataFetchInterval = setInterval(fetchData, 30000); }
-    else { updateDataStatus('⚠️ 暫無數據', '#f5f5f5', '#9e9e9e'); }
+  
+  if (sourceConfig[source].hasData) { 
+    fetchData(); 
+    dataFetchInterval = setInterval(fetchData, 30000); 
+  } else { 
+    updateDataStatus('⚠️ 暫無數據', '#f5f5f5', '#9e9e9e'); 
   }
-}
-
-async function fetchPlantData() {
-  try {
-    const res = await fetch(PLANT_GAS_URL, { redirect: 'follow' });
-    const data = await res.json();
-    document.getElementById('plant-pm25-value').textContent = `${data.pm25} μg/m³`;
-    document.getElementById('plant-humidity').textContent = `${data.humidity} %`;
-    document.getElementById('plant-temperature').textContent = `${data.temperature} °C`;
-    document.getElementById('plant-soil-humidity').textContent = `${data.soil_moisture} %`;
-    document.getElementById('plant-co2').textContent = `${data.co2} ppm`;
-    updateDataStatus('✅ 植物數據正常', '#e8f5e9', '#2e7d32');
-  } catch (e) { updateDataStatus('❌ 植物數據斷線', '#ffebee', '#c62828'); }
 }
 
 function updateDataStatus(t, bg, c) {
@@ -196,11 +221,14 @@ function updateClock() {
 
 function openModal(type) {
   const modal = document.getElementById('history-modal');
-  if (!historyData[type]) return;
+  if (!historyData[type] || historyData[type].values.length === 0) return;
+  
   modal.classList.add('active');
   document.getElementById('modal-title').textContent = `${historyData[type].label} 歷史數據`;
+  
   const ctx = document.getElementById('historyChart').getContext('2d');
   if (historyChartInstance) historyChartInstance.destroy();
+  
   historyChartInstance = new Chart(ctx, {
     type: 'line',
     data: {
@@ -210,9 +238,14 @@ function openModal(type) {
         data: historyData[type].values,
         borderColor: historyData[type].color,
         backgroundColor: historyData[type].color + '22',
-        fill: true, tension: 0.4
+        fill: true,
+        tension: 0.4
       }]
     },
-    options: { responsive: true, maintainAspectRatio: false }
+    options: { 
+      responsive: true, 
+      maintainAspectRatio: false,
+      scales: { y: { beginAtZero: false } }
+    }
   });
 }
