@@ -1,11 +1,11 @@
 const PLANT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwWD2sPK7Iw61gkzCTCOLIYEnmfirKXeLgdvxR3m6vEs1ZecdUj9x5YPwNvMSqW47gtHQ/exec';
 
 const sourceConfig = {
-    'A': { name: '小芳堂', deviceId: 'B827EB63D1C8', type: 'lass', hasData: true },
-    'B': { name: '司令台', deviceId: 'B827EBC2994D', type: 'lass', hasData: true },
-    'C': { name: '小田原', deviceId: '', type: 'none', hasData: false },
-    'D': { name: '腳踏車練習場', deviceId: '', type: 'none', hasData: false },
-    'E': { name: '植物觀測', deviceId: '', type: 'gas', hasData: true }
+    'A': { name: '小芳堂', deviceId: 'B827EB63D1C8', type: 'lass' },
+    'B': { name: '司令台', deviceId: 'B827EBC2994D', type: 'lass' },
+    'C': { name: '小田原', deviceId: '', type: 'none' },
+    'D': { name: '腳踏車練習場', deviceId: '', type: 'none' },
+    'E': { name: '植物觀測', deviceId: '', type: 'gas' }
 };
 
 let currentSource = 'A';
@@ -14,57 +14,61 @@ let pm25GaugeChart = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     initPM25Gauge();
-    
+    updateClock();
+    setInterval(updateClock, 1000);
+
     const dropdownBtn = document.getElementById('source-selector');
     const dropdownList = document.getElementById('source-list');
 
+    // Dropdown toggle
     dropdownBtn.onclick = (e) => {
         e.stopPropagation();
         dropdownList.classList.toggle('hidden');
     };
 
+    // Close dropdown on outside click
+    window.onclick = () => dropdownList.classList.add('hidden');
+
+    // Switch logic
     document.querySelectorAll('#source-list li').forEach(li => {
         li.onclick = () => {
             currentSource = li.dataset.source;
             dropdownBtn.textContent = sourceConfig[currentSource].name + " ▼";
-            dropdownList.classList.add('hidden');
-            handlePageSwitch();
+            switchPage();
         };
     });
 
+    // Modal Close
     const modal = document.getElementById('history-modal');
     document.getElementById('modal-close').onclick = () => modal.classList.remove('active');
-    modal.onclick = (e) => { if(e.target === modal) modal.classList.remove('active'); };
 
-    handlePageSwitch();
-    setInterval(updateClock, 1000);
+    // Initial load
+    switchPage();
 });
 
-function handlePageSwitch() {
+function switchPage() {
     if (dataFetchInterval) clearInterval(dataFetchInterval);
 
-    const layouts = {
-        std: document.getElementById('standard-layout'),
-        plant: document.getElementById('plant-layout'),
-        none: document.getElementById('no-data-layout')
-    };
+    const std = document.getElementById('standard-layout');
+    const plant = document.getElementById('plant-layout');
+    const none = document.getElementById('no-data-layout');
 
-    // Hide all
-    Object.values(layouts).forEach(l => l.classList.add('hidden'));
+    // Hide everything first
+    [std, plant, none].forEach(el => el.classList.add('hidden'));
 
     const config = sourceConfig[currentSource];
 
     if (config.type === 'lass') {
-        layouts.std.classList.remove('hidden');
+        std.classList.remove('hidden');
         fetchLassData();
         dataFetchInterval = setInterval(fetchLassData, 30000);
     } else if (config.type === 'gas') {
-        layouts.plant.classList.remove('hidden');
+        plant.classList.remove('hidden');
         fetchPlantData();
         dataFetchInterval = setInterval(fetchPlantData, 30000);
     } else {
-        layouts.none.classList.remove('hidden');
-        updateDataStatus("⚠️ 無數據源", "#9e9e9e");
+        none.classList.remove('hidden');
+        updateDataStatus("⚠️ 無數據源", "#999");
     }
 }
 
@@ -83,12 +87,12 @@ async function fetchLassData() {
         document.getElementById('temperature-card').textContent = `${temp.toFixed(1)} °C`;
         document.getElementById('humidity-card').textContent = `${humi.toFixed(1)} %`;
         document.getElementById('precipitation-card').textContent = `${calculatePrecip(humi, temp)} %`;
-        // Set others to random/defaults for this demo
-        document.getElementById('sunlight-card').textContent = `${(Math.random()*500).toFixed(0)} lux`;
+        document.getElementById('windspeed-card').textContent = `${(feed.s_w0 || 0).toFixed(1)} m/s`;
+        document.getElementById('sunlight-card').textContent = `${(feed.s_l0 || 350).toFixed(0)} lux`;
         
         updateDataStatus("✅ 連線正常", "#2e7d32");
     } catch (e) {
-        updateDataStatus("❌ 讀取錯誤", "#c62828");
+        updateDataStatus("❌ 數據讀取失敗", "#c62828");
     }
 }
 
@@ -103,13 +107,13 @@ async function fetchPlantData() {
         document.getElementById('plant-co2').textContent = `${data.co2} ppm`;
         updateDataStatus("✅ 植物數據更新", "#2e7d32");
     } catch (e) {
-        updateDataStatus("❌ 植物讀取錯誤", "#c62828");
+        updateDataStatus("❌ 植物數據錯誤", "#c62828");
     }
 }
 
 function calculatePrecip(h, t) {
-    let c = h > 70 ? Math.pow((h - 70) / 30, 2) * 100 : 0;
-    return Math.min(Math.round(c), 99);
+    let chance = h > 70 ? Math.pow((h - 70) / 30, 2) * 100 : 0;
+    return Math.min(Math.round(chance), 99);
 }
 
 function initPM25Gauge() {
@@ -124,7 +128,7 @@ function initPM25Gauge() {
 function updatePM25Gauge(val) {
     let color = '#3aa02d', status = "良好";
     if(val > 35) { color = '#ff9800'; status = "普通"; }
-    if(val > 54) { color = '#f44336'; status = "不健康"; }
+    if(val > 54) { color = '#f44336'; status = "有害"; }
 
     document.getElementById('pm25-value').textContent = val;
     const badge = document.getElementById('pm25-status-badge');
